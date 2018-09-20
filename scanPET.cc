@@ -93,11 +93,11 @@ int countCoincidences(const char *input_name)
 
 
 
-void scanPET(){
+void scanPET(string inputPath){
 
   gStyle -> SetOptStat(0);
   gStyle -> SetOptFit(1111);
-  string inputPath = "160deg";
+  //string inputPath = "160deg";
 
   const int dimPos = 21;
   float xPos[dimPos] = {2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5,10.0,10.5,11.0,11.5,12.0};
@@ -107,8 +107,8 @@ void scanPET(){
   float nCounts_err[dimPos];
 
   long *dummy1 = 0, *dummy2 = 0, *dummy3 = 0, *dummy4 = 0;
-  if(gSystem -> GetPathInfo(Form((inputPath + "/pet_scan_%s.root").c_str(),inputPath.c_str()),dummy1,dummy2,dummy3,dummy4) == 0){
-    TFile *file = new TFile(Form((inputPath + "/pet_scan_%s.root").c_str(),inputPath.c_str()),"READ");
+  if(gSystem -> GetPathInfo(Form(("data/pet_scan_%s.root").c_str(),inputPath.c_str()),dummy1,dummy2,dummy3,dummy4) == 0){
+    TFile *file = new TFile(Form(("data/pet_scan_%s.root").c_str(),inputPath.c_str()),"READ");
     TH1D *hScan = (TH1D*) file -> Get("hScan");
 
     bool isGaus1, isGaus2;
@@ -149,6 +149,25 @@ void scanPET(){
       parGaus2[0] = 10000.; parGaus2[1] = 5.2; parGaus2[2] = 0.5;
       rangeGaus2[0] = 7.5 ; rangeGaus2[1] = 9.;
     }
+
+    if(inputPath == "280deg"){
+      isGaus1 = kTRUE;
+      parGaus1[0] = 10000.; parGaus1[1] = 7.2; parGaus1[2] = 0.5;
+      rangeGaus1[0] = 6; rangeGaus1[1] = 9.;
+      isGaus2 = kFALSE;
+      parGaus2[0] = 10000.; parGaus2[1] = 5.2; parGaus2[2] = 0.5;
+      rangeGaus2[0] = 7.5 ; rangeGaus2[1] = 9.;
+    }
+
+    if(inputPath == "320deg"){
+      isGaus1 = kTRUE;
+      parGaus1[0] = 10000.; parGaus1[1] = 5.2; parGaus1[2] = 0.5;
+      rangeGaus1[0] = 7.5; rangeGaus1[1] = 9.;
+      isGaus2 = kFALSE;
+      parGaus2[0] = 10000.; parGaus2[1] = 5.2; parGaus2[2] = 0.5;
+      rangeGaus2[0] = 7.5 ; rangeGaus2[1] = 9.;
+    }
+
     //gScan->SetMarkerStyle(20);
     //gScan->Draw("APE1");
     //cout << (long) gScan << endl;
@@ -157,13 +176,19 @@ void scanPET(){
     fitFunc1->SetParameter(0,parGaus1[0]);
     fitFunc1->SetParameter(1,parGaus1[1]);
     fitFunc1->SetParameter(2,parGaus1[2]);
-    if(isGaus1) hScan->Fit(fitFunc1,"R0","",rangeGaus1[0],rangeGaus1[1]);
+    if(isGaus1){
+      hScan->Fit(fitFunc1,"R0","",rangeGaus1[0],rangeGaus1[1]);
+      printf("double x_%s = {%f,%f,%f}; \n",inputPath.c_str(),fitFunc1->GetParameter(0),fitFunc1->GetParameter(1),fitFunc1->GetParameter(2));
+    }
 
     TF1 *fitFunc2 = new TF1("fitFunc2","gaus",2,12);
     fitFunc2->SetParameter(0,parGaus2[0]);
     fitFunc2->SetParameter(1,parGaus2[1]);
     fitFunc2->SetParameter(2,parGaus2[2]);
-    if(isGaus2) hScan->Fit(fitFunc2,"R0","",rangeGaus2[0],rangeGaus2[1]);
+    if(isGaus2){
+      hScan->Fit(fitFunc2,"R0","",rangeGaus2[0],rangeGaus2[1]);
+      printf("double x_%s = {%f,%f,%f}; \n",inputPath.c_str(),fitFunc2->GetParameter(0),fitFunc2->GetParameter(1),fitFunc2->GetParameter(2));
+    }
 
     TCanvas* cScan = new TCanvas("cScan","cScan");
     hScan -> Draw();
@@ -179,14 +204,15 @@ void scanPET(){
     for(int i = 0; i < dimPos; i++){
       xPos_err[i] = 0.2;
 
-      nCounts[i] = countCoincidences(Form((inputPath + "/pet_scan_%scm_%s.txt").c_str(),sPos[i].c_str(),inputPath.c_str()));
+      gSystem -> Exec("mkdir -p data");
+      nCounts[i] = countCoincidences(Form(("data/pet_scan_%scm_%s.txt").c_str(),sPos[i].c_str(),inputPath.c_str()));
       nCounts_err[i] = TMath::Sqrt(nCounts[i]);
       cout<<nCounts[i]<<" "<<nCounts_err[i]<<endl;
       hScan -> SetBinContent(i+1,nCounts[i]);
       hScan -> SetBinError(i+1,nCounts_err[i]);
     }
 
-    TFile *file = new TFile(Form((inputPath + "/pet_scan_%s.root").c_str(),inputPath.c_str()),"RECREATE");
+    TFile *file = new TFile(Form(("data/pet_scan_%s.root").c_str(),inputPath.c_str()),"RECREATE");
     hScan -> Write();
     file -> Close();
   }
