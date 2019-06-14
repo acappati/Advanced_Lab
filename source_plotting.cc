@@ -123,7 +123,12 @@ void source_plotting(){
   for(int i = 0;i < dimX2;i++){funcTrack2[i] -> Draw("same");}
 
   //============================================================================
+  //Int_t colors[] = {0, 1, 2, 3, 4, 5, 6}; // #colors >= #levels - 1
+  //gStyle -> SetPalette((sizeof(colors)/sizeof(Int_t)), colors);
+  //Double_t levels[] = {-3.4e38, 1.17e-38, 0.90, 0.95, 1.00, 1.05, 1.10, 3.4e38};
+
   TF2 *FuncSumTrackGaus = new TF2("FuncSumTrackGaus",Func_Sum_Track_Gaus,-7,7,-7,7,0);
+  //FuncSumTrackGaus -> SetContour((sizeof(levels)/sizeof(Double_t)), levels);
   FuncSumTrackGaus -> SetNpx(500);
   FuncSumTrackGaus -> SetNpy(500);
 
